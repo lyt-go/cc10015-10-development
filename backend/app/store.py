@@ -15,6 +15,8 @@ class Store:
         self._tables: dict[str, list[dict[str, Any]]] = {
             name: [dict(row) for row in rows] for name, rows in SEED_ROWS.items()
         }
+        # AB对比结果表为独立结果表，不与分析报告混存，避免跨实验数据混入。
+        self._tables.setdefault("ab_compare", [])
         self._versions: dict[str, int] = {name: 1 for name in self._tables}
         self._created_at: dict[str, float] = {name: time.time() for name in self._tables}
 

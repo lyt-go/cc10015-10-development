@@ -12,6 +12,23 @@ STATUS_ORDER = ["草稿", "待校验", "已生效", "已废弃"]
 ACTION_RULES = {"提交校验": "待校验", "标记生效": "已生效", "标记废弃": "已废弃"}
 NEGATIVE_ACTIONS = []
 
+# V010 跨模块指标目录：AB对比结果表的指标标识在这里注册计算口径，
+# 不写入 CRUD 数据表，避免污染指标定义列表行数。
+V010_METRIC_CATALOG = {
+    "METR-CVR-V010": {
+        "指标编号": "METR-CVR-V010", "指标名称": "点击率",
+        "计算公式": "clicks / impressions", "口径版本": "V010",
+    },
+    "METR-PAY-V010": {
+        "指标编号": "METR-PAY-V010", "指标名称": "支付转化率",
+        "计算公式": "pay_users / visit_users", "口径版本": "V010",
+    },
+    "METR-X-V010": {
+        "指标编号": "METR-X-V010", "指标名称": "转化率",
+        "计算公式": "converted_users / exposed_users", "口径版本": "V010",
+    },
+}
+
 
 class MetricDefService:
     def list_entries(
@@ -36,6 +53,24 @@ class MetricDefService:
 
     def get_entry(self, entry_id: int) -> dict[str, Any] | None:
         return store.find(MODULE, entry_id)
+
+    def find_by_metric_id(self, metric_id: str) -> dict[str, Any] | None:
+        """按业务指标编号查找口径定义，供AB对比结果表V010跨模块校验。
+
+        先查指标定义数据表，未登记的V010指标标识回退到V010指标目录，
+        保证跨模块调用链始终能按实验归属校验计算口径。
+        """
+        if not metric_id:
+            return None
+        for row in store.rows(MODULE):
+            if str(row.get("指标编号", "")) == str(metric_id):
+                return row
+        catalog = V010_METRIC_CATALOG.get(str(metric_id))
+        return dict(catalog) if catalog else None
+
+    def list_v010_catalog(self) -> list[dict[str, Any]]:
+        """V010指标目录（只读），供AB对比结果表追溯指标标识与口径。"""
+        return [dict(item) for item in V010_METRIC_CATALOG.values()]
 
     def create_entry(self, values: dict[str, Any]) -> tuple[dict[str, Any] | None, list[str]]:
         missing = [field for field in REQUIRED_FIELDS if not str(values.get(field) or "").strip()]

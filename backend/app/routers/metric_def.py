@@ -41,6 +41,12 @@ def list_entries(
     return PageResult(items=items, total=total, page=page, size=size)
 
 
+@router.get("/v010_catalog")
+def list_v010_catalog() -> dict[str, object]:
+    """V010指标目录（只读）：AB对比结果表按指标标识追溯计算口径。"""
+    return {"items": service.list_v010_catalog(), "caliber_version": "V010"}
+
+
 @router.get("/export")
 def export_entries(
     request: Request,

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import csv
 import io
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
@@ -72,6 +73,22 @@ def get_entry(entry_id: int) -> dict:
     if entry is None:
         raise HTTPException(status_code=404, detail=f"样本分群 {entry_id} 不存在或已归档")
     return entry
+
+
+@router.get("/{entry_id}/members")
+def get_group_members(entry_id: int) -> dict[str, Any]:
+    """读取分群成员明细（含实验归属与范围标记），供AB对比结果表抽屉核对。"""
+    entry = service.get_entry(entry_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail=f"样本分群 {entry_id} 不存在或已归档")
+    members = service.get_group_members(entry_id)
+    return {
+        "items": members,
+        "total": len(members),
+        "分群编号": entry.get("分群编号"),
+        "experiment_id": entry.get("experiment_id"),
+        "access_scope": entry.get("access_scope"),
+    }
 
 
 @router.post("", response_model=ActionResult)

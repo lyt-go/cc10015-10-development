@@ -13,6 +13,9 @@ STATUS_ORDER = ["草稿", "待审批", "运行中", "已结束"]
 ACTION_RULES = {"提交审批": "待审批", "启动实验": "运行中", "终止实验": "已结束"}
 NEGATIVE_ACTIONS = []
 
+# 实验归属范围：按实验创建顺序轮询，AB对比时用于越权判定。
+SCOPES = ["scope-a", "scope-b"]
+
 
 class ExperimentService:
     def get_timeline(self) -> list[dict[str, Any]]:
@@ -75,6 +78,8 @@ class ExperimentService:
         exp_n = total_n - control_n
         exp_id = experiment["id"]
         exp_code = experiment.get("方案编号", f"EXPE-{exp_id:04d}")
+        access_scope = experiment.get("access_scope") or SCOPES[(exp_id - 1) % len(SCOPES)]
+        experiment["access_scope"] = access_scope
         # 创建对照组分群
         sg_rows = store.rows("sample_group")
         now_iso = date.today().isoformat()
@@ -93,6 +98,7 @@ class ExperimentService:
             "abnormal": False,
             "experiment_id": exp_id,
             "group_type": "control",
+            "access_scope": access_scope,
             "created_at": time.time(),
         }
         sg_rows.append(control_sg)
@@ -113,6 +119,7 @@ class ExperimentService:
             "abnormal": False,
             "experiment_id": exp_id,
             "group_type": "experiment",
+            "access_scope": access_scope,
             "created_at": time.time(),
         }
         sg_rows.append(exp_sg)

@@ -9,6 +9,9 @@ from __future__ import annotations
 from app.routers import experiment as router_experiment
 from app.routers import sample_group as router_sample_group
 from app.routers import metric_def as router_metric_def
+# ab_compare 的前缀 /api/ab_result/compare 必须先于 ab_result 注册，
+# 否则 compare 会被 ab_result 的 /{entry_id} 抢先匹配。
+from app.routers import ab_compare as router_ab_compare
 from app.routers import ab_result as router_ab_result
 from app.routers import segment_compare as router_segment_compare
 from app.routers import drill_down as router_drill_down
@@ -25,4 +28,4 @@ from app.routers import metric_alias as router_metric_alias
 from app.routers import expr_factor as router_expr_factor
 from app.routers import evaluate_board as router_evaluate_board
 
-ROUTERS = [router_experiment, router_sample_group, router_metric_def, router_ab_result, router_segment_compare, router_drill_down, router_data_filter, router_attr_analysis, router_anomaly_detect, router_forecast_model, router_data_export, router_cohort_track, router_chart_config, router_insight_report, router_data_freshness, router_metric_alias, router_expr_factor, router_evaluate_board]
+ROUTERS = [router_experiment, router_sample_group, router_metric_def, router_ab_compare, router_ab_result, router_segment_compare, router_drill_down, router_data_filter, router_attr_analysis, router_anomaly_detect, router_forecast_model, router_data_export, router_cohort_track, router_chart_config, router_insight_report, router_data_freshness, router_metric_alias, router_expr_factor, router_evaluate_board]
